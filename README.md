@@ -32,36 +32,27 @@ Able to shorten a long URL.
 
 ```
 - Frontend:
-    - TypeScript
     - React
-    - Axios
 - Backend:
     - Node
     - Express Framework
-    - Golang
-    - Gin Framework
     - Database:
-        - one of [ mysql or mongoDB]
+        - mongoDB
 - Deployment:
-    - CI/CD pipeline tool:
-        - one of [ Github Action, Gitlab CI/CD, Travis CI ]
     - Managing Infrastructure:
         - Docker: define server
         - GCP : cloud platform to run the resources
-- others:
-    - make
+        - Terraform
 
 ```
 
 ## Challenges:
 
-1. learning React while applying Typescript.
+1. learning React.
 2. May divide the project into 2 different version based on what Framework to use for implementing Backend. -> will be implementing both.
-3. 1st deadline: April 28th - 29th.
-4. 2nd deadline: May 5th.
-5. designing models and diagram / high level diagram of showing how frontend and backend communicate (System design)
-6. able to determine / design / implement end points
-7. first time applying deployment.(not determine yet)
+3. designing models and diagram / high level diagram of showing how frontend and backend communicate (System design)
+4. able to determine / design / implement end points
+5. first time applying deployment.(not determine yet)
 
 ## Role:
 
