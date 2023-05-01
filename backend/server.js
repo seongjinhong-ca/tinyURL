@@ -21,6 +21,30 @@ app.use(bodyParser.urlencoded({extended:true}));
 // temporary storage -> later change it to db by connecting db using other module
 
 
+//login system
+// to dos
+/*
+1. login
+    -> end-pints : login, sign up (id, username),
+    -> middle-wares: validatePassword, check unique username(id)
+2. how to make a new short url(url giving to frontend) is unique
+    -> going through array is not good there are too many urls
+    -> 2 answers
+        hints:
+        0000 0000
+        0000 0001
+        [url10, url1, url2, ...]
+        url10 = {_id:unique, counter:6}
+        indexing database : _id, counter
+        sorted list -> binary search
+        binary search
+3. real database -> MongoDB
+4. AWS, GCP
+
+500 < num of employees
+
+*/
+
 const createRandomString = (options) => {
     let eight_digits = "";
     let length = 8;
@@ -75,8 +99,15 @@ ref LinkL: https://medium.com/@sandeep4.verma/system-design-scalable-url-shorten
     original url
     creation date
     expiry date
+    api key
     user id
 }
+
+
+cache redis for windows:
+https://github.com/tporadowski/redis/releases
+https://redis.io/docs/getting-started/installation/install-redis-on-windows/
+
 */
 // rate limiting system design
 /*
@@ -112,17 +143,17 @@ const validateItIsURL = () => {
         return false;
     }
     let valid_protocol = inputURL.protocol === "http:" || inputURL.protocol === "https:";
-    if(valid_protocol){
-        if(inputURL.protocol === "http:"){
-            // remove protocol part
-            str_originalUrl.replace("http", "");
-        }
-        else if(inputURL.protocol === "https:"){
-            str_originalUrl.replace("http", "");
-        }
-    }
-    let valid_domain = inputURL.host === ""
-    return 
+    // if(valid_protocol){
+    //     if(inputURL.protocol === "http:"){
+    //         // remove protocol part
+    //         str_originalUrl.replace("http", "");
+    //     }
+    //     else if(inputURL.protocol === "https:"){
+    //         str_originalUrl.replace("http", "");
+    //     }
+    // }
+    // let valid_domain = inputURL.host === ""
+    // return 
 
     // regex method
     // let valid_addr =
@@ -154,7 +185,6 @@ app.post(`/shorten`, validateItIsURL, (req, res)=>{
         if(err){ throw err};
         console.log("urls.json is updated");
     } )
-
 
     res.status(200).json({
         success:true,
