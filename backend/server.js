@@ -26,6 +26,7 @@ const fs = require('fs');
 // file I created
 const Urls = require('../db/urls.json');
 const expiryDates = require('../db/expiry.json');
+const { Url } = require('./model/url');
 
 const short_urls = Urls;
 
@@ -155,23 +156,6 @@ const validateItIsURL = () => {
         return false;
     }
     let valid_protocol = inputURL.protocol === "http:" || inputURL.protocol === "https:";
-    // if(valid_protocol){
-    //     if(inputURL.protocol === "http:"){
-    //         // remove protocol part
-    //         str_originalUrl.replace("http", "");
-    //     }
-    //     else if(inputURL.protocol === "https:"){
-    //         str_originalUrl.replace("http", "");
-    //     }
-    // }
-    // let valid_domain = inputURL.host === ""
-    // return 
-
-    // regex method
-    // let valid_addr =
-    // originalUrl.match(
-    //     /(https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|www\.[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9]+\.[^\s]{2,}|www\.[a-zA-Z0-9]+\.[^\s]{2,})/gi);
-    // return (valid_addr !== null)
 }
 // end-points
 const sweep_toCheck_expiredUrl = () => {
@@ -183,7 +167,7 @@ const sweep_toCheck_expiredUrl = () => {
     }
 }
 
-app.post(`/shorten`, validateItIsURL, sweep_toCheck_expiredUrl, (req, res)=>{
+app.post(`/shorten`, (req, res)=>{
     // console.log("req.body: ")
     // console.log(req.body);
     // console.log("res.shortUrlParam: ")
@@ -200,31 +184,32 @@ app.post(`/shorten`, validateItIsURL, sweep_toCheck_expiredUrl, (req, res)=>{
     // produce expiredAt
     const one_week = date.setDate(date.getDate() + 7);
 
-
-
-    // if shortUrlParam is unique, store it in the list
-    const url = {
+    // create an url object
+    const urlObj = {
         shortUrl:shortUrlParam,
         originalUrl:originalUrl,
         expiredAt:one_week,
         createdAt:now,
     }
-    short_urls.push(url);
-    const str_short_urls = JSON.stringify(short_urls);
 
     // try to push the result into MongoDB using mongoose
-    
-
-    // write on Urls.json file
-    fs.writeFile('../db/urls.json', str_short_urls, (err) =>{
-        if(err){ throw err};
-        console.log("urls.json is updated");
-    } )
-
-    res.status(200).json({
-        success:true,
-        url:url
+    const url = new Url(urlObj);
+    url.save().then((url)=>{
+        return res.status(200).json(
+            {
+                success:true,
+                url:url
+            }
+        )
+    }).catch((err)=>{
+        return res.json(
+            {
+                success:false,
+                err:err
+            }
+        )
     })
+
 })
 
 app.get(`/url/:shortUrlId`, (req, res) => {

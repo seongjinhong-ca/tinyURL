@@ -1,2 +1,4 @@
 #dependency
 /node_modules
+
+/config/dev_key.js
