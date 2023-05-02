@@ -3,6 +3,22 @@ const express = require('express');
 const app = express();
 const router = express.Router();
 const bodyParser = require('body-parser');
+const mongoose = require('mongoose');
+
+// get the key mongoURI from config/dev_key
+const config = require("./config/dev_key");
+// connect to mongoDB -> before create DB
+// await mongoose.connect('mongodb://127.0.0.1:27017/test');
+try{
+    mongoose.connect(config.mongoURI, {})
+    .then(
+        ()=> {console.log('MongoDB connected')}
+    );
+} catch(err) {
+    console.log("mongoDB not connected!")
+    handleError(err);
+}
+
 
 // Node.js built-in module
 const fs = require('fs');
@@ -104,10 +120,6 @@ ref LinkL: https://medium.com/@sandeep4.verma/system-design-scalable-url-shorten
 }
 
 
-cache redis for windows:
-https://github.com/tporadowski/redis/releases
-https://redis.io/docs/getting-started/installation/install-redis-on-windows/
-
 */
 // rate limiting system design
 /*
@@ -162,24 +174,47 @@ const validateItIsURL = () => {
     // return (valid_addr !== null)
 }
 // end-points
-app.post(`/shorten`, validateItIsURL, (req, res)=>{
-    console.log("req.body: ")
-    console.log(req.body);
-    console.log("res.shortUrlParam: ")
-    console.log(res.shortUrlParam)
+const sweep_toCheck_expiredUrl = () => {
+    for (let i=0; i< short_urls.length; i++){
+        let now = new Date.now();
+        if (short_urls[i].expiredAt <= now){
+            // removed from mongodb
+        }
+    }
+}
+
+app.post(`/shorten`, validateItIsURL, sweep_toCheck_expiredUrl, (req, res)=>{
+    // console.log("req.body: ")
+    // console.log(req.body);
+    // console.log("res.shortUrlParam: ")
+    // console.log(res.shortUrlParam)
     const {originalUrl} = req.body;
     // generate shortUrl
     let shortUrlParam = generateShortUrl();
     // store original url into db
     shortUrlParam = checkIfShortUrlParamAlreadyExist(shortUrlParam);
     
+    // produce createdAt
+    const now = Date.now();
+    let date = new Date();
+    // produce expiredAt
+    const one_week = date.setDate(date.getDate() + 7);
+
+
+
     // if shortUrlParam is unique, store it in the list
     const url = {
-        shortUrlParam:shortUrlParam,
-        originalUrl:originalUrl
+        shortUrl:shortUrlParam,
+        originalUrl:originalUrl,
+        expiredAt:one_week,
+        createdAt:now,
     }
     short_urls.push(url);
     const str_short_urls = JSON.stringify(short_urls);
+
+    // try to push the result into MongoDB using mongoose
+    
+
     // write on Urls.json file
     fs.writeFile('../db/urls.json', str_short_urls, (err) =>{
         if(err){ throw err};
