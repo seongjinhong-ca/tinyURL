@@ -109,6 +109,12 @@ shortening url:
 
 ref LinkL: https://medium.com/@sandeep4.verma/system-design-scalable-url-shortener-service-like-tinyurl-106f30f23a82
 
+ref link to makeid: https://stackoverflow.com/questions/1349404/generate-random-string-characters-in-javascript
+https://stackoverflow.com/questions/6860853/generate-random-string-for-div-id
+
+ref link to adding current ip address : https://studio3t.com/knowledge-base/articles/mongodb-atlas-login-ip-whitelisting/#:~:text=To%20whitelist%20multiple%20IP%20addresses,Whitelist%20Entry%2C%20then%20click%20Confirm.
+https://studio3t.com/knowledge-base/articles/mongodb-atlas-login-ip-whitelisting/
+
 1. load balancer
 2. url model:
 {
@@ -235,20 +241,31 @@ app.get(`/url/:shortUrlId`, (req, res) => {
             //     originalUrl
             // )
             // return res.status(200).send(orignialUrl);
-            return res.status(302).redirect(originalUrl);
+            // return res.status(302).redirect(originalUrl);
         }
     }
 
     // try to get(find) an original url from mongoDB
-    const original_url = (async () => {
-        try {
-            await Url.findOne({shortUrl:shortUrlId})
-        } catch (err) {
-            throw err;
-        }
-    });
+    const original_url = null;
+    Url.findOne({shortUrl:shortUrlId})
+    .then((url) => {
+        return res.status(302).redirect(url.originalUrl);
+    }).catch((err) => {
+        throw err
+    })
+
+    /*
+    const original_url = null;
+    try {
+        original_url = (() => await Url.findOne({shortUrl:shortUrlId}));
+    }catch (err){
+        throw err
+    }
+
+    try catch block + async await + promise 비교
+    */
     // once I get it, response with it -> redirect user to original url
-    res.status(302).redirect(original_url);
+
     // res.status(200).json(
     //     {
     //         success:true,
