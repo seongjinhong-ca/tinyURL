@@ -209,27 +209,47 @@ app.post(`/shorten`, (req, res)=>{
             }
         )
     })
-
 })
 
 app.get(`/url/:shortUrlId`, (req, res) => {
     console.log(req.params)
     const{shortUrlId} = req.params;
+
+    const originalUrl = null;
     for(let i=0; i< short_urls.length; i++){
         if(short_urls[i].shortUrlParam === shortUrlId){
-            let orignialUrl = short_urls[i].originalUrl;
+            originalUrl = short_urls[i].originalUrl;
             // return res.status(200).json(
             //     // {
             //     //     success:true,
-            //     //     orignialUrl: orignialUrl,
+            //     //     originalUrl: originalUrl,
             //     // }
-            //     orignialUrl
+            //     originalUrl
             // )
             // return res.status(200).send(orignialUrl);
-            return res.status(302).redirect(orignialUrl);
+            return res.status(302).redirect(originalUrl);
         }
     }
+
+    // try to get(find) an original url from mongoDB
+    const original_url = (async () => {
+        try {
+            await Url.findOne({shortUrl:shortUrlId})
+        } catch (err) {
+            throw err;
+        }
+    });
+    // once I get it, response with it -> redirect user to original url
+    res.status(302).redirect(original_url);
+    // res.status(200).json(
+    //     {
+    //         success:true,
+    //         original_url:original_url
+    //     }
+    // )
 })
+
+
 
 const createExpiryDate = () => {
     let creation_date = Date.now();
