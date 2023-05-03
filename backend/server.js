@@ -168,15 +168,18 @@ const sweep_toCheck_expiredUrl = () => {
 }
 
 app.post(`/shorten`, (req, res)=>{
-    // console.log("req.body: ")
-    // console.log(req.body);
+    console.log("req.body: ")
+    console.log(req.body);
     // console.log("res.shortUrlParam: ")
     // console.log(res.shortUrlParam)
     const {originalUrl} = req.body;
+    const str_originalUrl = JSON.stringify(originalUrl);
+    console.log("str_originalUrl: ")
+    console.log(str_originalUrl)
     // generate shortUrl
     let shortUrlParam = generateShortUrl();
     // store original url into db
-    shortUrlParam = checkIfShortUrlParamAlreadyExist(shortUrlParam);
+    // shortUrlParam = checkIfShortUrlParamAlreadyExist(shortUrlParam);
     
     // produce createdAt
     const now = Date.now();
@@ -192,9 +195,14 @@ app.post(`/shorten`, (req, res)=>{
         createdAt:now,
     }
 
+    console.log("urlObj: ")
+    console.log(urlObj);
+
     // try to push the result into MongoDB using mongoose
-    const url = new Url(urlObj);
+    const url = new Url({...urlObj});
     url.save().then((url)=>{
+        console.log("url: ")
+        console.log(url)
         return res.status(200).json(
             {
                 success:true,
