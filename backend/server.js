@@ -274,6 +274,32 @@ app.get(`/url/:shortUrlId`, (req, res) => {
     // )
 })
 
+// /users/register
+app.post('/users/register', (req, res)=>{
+    // get the input from req.body
+    const {email, password} = req.body;
+
+    // create an object
+    const userObj = {
+        email: email,
+        password: password,
+    }
+    // create a model new Model()
+    // -> since it has to go get a collection(table) from DB, I need to wait for IO asynchronously
+    // do promise or await
+    // save the model into database (or file system or localStorage)
+
+
+
+
+    // ref: https://www.youtube.com/watch?v=AUOzvFzdIk4
+    // ref: https://www.youtube.com/watch?v=12WqXCa0D6g
+    // mvo ref (udamy youtube): https://www.youtube.com/watch?v=EGZci21y9dw&list=PLAwxTw4SYaPkGKjpeiLWz8ydvFEkmRkBn&index=23
+    // leetcode : https://neetcode.io/practice
+    // nginx: https://www.youtube.com/watch?v=hA0cxENGBQQ
+    // terraform : https://developer.hashicorp.com/terraform/tutorials/aws-get-started/infrastructure-as-code
+
+})
 
 
 const createExpiryDate = () => {
