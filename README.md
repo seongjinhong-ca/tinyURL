@@ -6,7 +6,7 @@ In Progress
 
 ## Goal for the project:
 
-Build an application that can shorten an URL.
+Build an application that can shorten an URL for a user.
 
 ## URL:
 
@@ -16,14 +16,14 @@ Able to shorten a long URL.
 
 ## preview && showcase:
 
-## Key Features of Application:
+## Key Features of Application (in progress):
 
 ```
 - Shorten an URL
-- Short url black list : avoid the url that contains harmful word
-- API support?
-- Web supported
-- Avoid short url loop
+- Able to authenticate a user by login and logout
+- Able to sign up for a new user.
+- Able to get my profile.
+- Rate limiting functionality
 ```
 
 ## Tools and Technology used & description:
@@ -36,8 +36,12 @@ Able to shorten a long URL.
 - Backend:
     - Node
     - Express Framework
+    - Mongoose
     - Database:
         - mongoDB
+    - Caching
+        - Redis
+        - Bash
 - Deployment:
     - Managing Infrastructure:
         - Docker: define server
@@ -58,13 +62,15 @@ Able to shorten a long URL.
 
 ```
 - Seongjin Hong
-  - Design system design, models, end points,
-  - Implement majority of the application
+  - Design system design, models, end points.
+  - Implement all of the application.
   - Decision making for choosing technology used for the project.
-  - Learning everything from scratch
+  - Able to learn a new technology as I build the project.
+  - Independent learning for Terraform, Redis.
+  - Familiarize myself with linux and bash terminal environment using WSL and CLI commands.
+
 - Bo Zhao
-  - Idea provider
-  - Advisor and partner for the project
-  - Expert on TypeScript + React
-  - Have experience on building Backend in industrial level.
+  - Partner for the project
+  - able to help TypeScript + React
+  - Have experience on building Backend (express).
 ```
