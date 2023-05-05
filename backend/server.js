@@ -27,6 +27,7 @@ const fs = require('fs');
 const Urls = require('../db/urls.json');
 const expiryDates = require('../db/expiry.json');
 const { Url } = require('./model/url');
+const { User } = require('./model/User');
 
 const short_urls = Urls;
 
@@ -277,6 +278,7 @@ app.get(`/url/:shortUrlId`, (req, res) => {
 // /users/register
 app.post('/users/register', (req, res)=>{
     // get the input from req.body
+    console.log(res.body);
     const {email, password} = req.body;
 
     // create an object
@@ -285,22 +287,62 @@ app.post('/users/register', (req, res)=>{
         password: password,
     }
     // create a model new Model()
+    const user = new User(userObj);
     // -> since it has to go get a collection(table) from DB, I need to wait for IO asynchronously
-    // do promise or await
+    // do promise or await to handle asynchronous moment
     // save the model into database (or file system or localStorage)
+    user.save().then((user)=>{
+        return res.status(200).json({
+            success:true,
+            user:user
+        })
+    })
+})
 
+const checkUserExist = async (user) => {
+    let userFound = null;
+    let retUser = {status:false, user: null};
+    // User.findOne({email : user.email})
+    // .then((user) =>{
+    //     userFound = user;
+    // })
+    userFound = await User.findOne({email : user.email})
+    console.log("userFound : ")
+    console.log(userFound);
+    if(userFound !== null){
+        retUser.status = true;
+        retUser.user = userFound;
+    }
+    console.log("retUser : ")
+    console.log(retUser);
+    return retUser;
+}
+app.post('/users/login', async (req, res)=>{
+    const {email, password} = req.body;
+    // create user object
+    const inputUser = {
+        email: email,
+        password: password,
+    }
+    // check if user exist, then return the user information
+    let ret_user = await checkUserExist(inputUser);
+    console.log("ret_user : ")
+    console.log(ret_user)
+    if(ret_user.status){
+        return res.status(200).json({
+            success:true,
+            user: ret_user
+        })
+    }
+})
 
-
-
-    // ref: https://www.youtube.com/watch?v=AUOzvFzdIk4
-    // ref: https://www.youtube.com/watch?v=12WqXCa0D6g
-    // mvo ref (udamy youtube): https://www.youtube.com/watch?v=EGZci21y9dw&list=PLAwxTw4SYaPkGKjpeiLWz8ydvFEkmRkBn&index=23
-    // leetcode : https://neetcode.io/practice
-    // nginx: https://www.youtube.com/watch?v=hA0cxENGBQQ
-    // terraform : https://developer.hashicorp.com/terraform/tutorials/aws-get-started/infrastructure-as-code
+app.get('/users/logout', (req, res) => {
 
 })
 
+app.get('/users/me/profile', (req, res) => {
+
+})
 
 const createExpiryDate = () => {
     let creation_date = Date.now();
