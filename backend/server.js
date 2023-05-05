@@ -5,6 +5,8 @@ const router = express.Router();
 const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
 
+const bcrypt = require('bcrypt');
+
 // get the key mongoURI from config/dev_key
 const config = require("./config/dev_key");
 // connect to mongoDB -> before create DB
@@ -275,8 +277,16 @@ app.get(`/url/:shortUrlId`, (req, res) => {
     // )
 })
 
+const hashPassword = async (password) => {
+    const saltRounds = 10;
+
+    // create salt and then hash the password
+    const salt = bcrypt.genSaltSync(saltRounds);
+    const hashedPassword = await bcrypt.hash(password, salt);
+    return hashedPassword;
+}
 // /users/register
-app.post('/users/register', (req, res)=>{
+app.post('/users/register', async (req, res)=>{
     // get the input from req.body
     console.log(res.body);
     const {email, password} = req.body;
@@ -286,7 +296,23 @@ app.post('/users/register', (req, res)=>{
         email: email,
         password: password,
     }
+
+    // hash the password
+    const hashedPassword = await hashPassword(password);
+    console.log("hash : ", hashedPassword);
+    
+    userObj.password = hashedPassword;
+    console.log("userObj : ", userObj);
+    // hash the password
+    // bcrypt.genSalt(saltRounds, function(err, salt) {
+    //     bcrypt.hash(myPassword, salt, function(err, hash) {
+    //         hashedPassword = hash;
+    //         userObj.password = hashedPassword;
+    //     });
+    // });
+
     // create a model new Model()
+
     const user = new User(userObj);
     // -> since it has to go get a collection(table) from DB, I need to wait for IO asynchronously
     // do promise or await to handle asynchronous moment
