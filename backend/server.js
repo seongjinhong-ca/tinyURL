@@ -196,12 +196,15 @@ app.post(`/shorten`, (req, res)=>{
     // produce expiredAt
     const one_week = date.setDate(date.getDate() + 7);
 
+
     // create an url object
     const urlObj = {
         shortUrl:shortUrlParam,
         originalUrl:originalUrl,
         expiredAt:one_week,
         createdAt:now,
+        // add owner == user of the short url
+    
     }
 
     console.log("urlObj: ")
@@ -325,7 +328,18 @@ app.post('/users/register', async (req, res)=>{
     })
 })
 
+const checkPassword = async (inputPassword, user) => {
+    // decrypt user.password
+    console.log("type: ");
+    const match = await bcrypt.compare(inputPassword, user.password)
+    return match;
+    // compare with inputPassword
+    // if they are the same -> return true
+    // if they are different -> re turn false
+}
 const checkUserExist = async (user) => {
+    const {email, password} = user;
+
     let userFound = null;
     let retUser = {status:false, user: null};
     // User.findOne({email : user.email})
@@ -336,8 +350,12 @@ const checkUserExist = async (user) => {
     console.log("userFound : ")
     console.log(userFound);
     if(userFound !== null){
-        retUser.status = true;
-        retUser.user = userFound;
+        // check if password is same
+        const validPassword = await checkPassword(password, userFound);
+        if(validPassword){
+            retUser.status = true;
+            retUser.user = userFound;
+        }
     }
     console.log("retUser : ")
     console.log(retUser);
@@ -362,7 +380,11 @@ app.post('/users/login', async (req, res)=>{
     }
 })
 
+const decryptPassword = () => {
+
+}
 app.get('/users/logout', (req, res) => {
+    decryptPassword()
 
 })
 
