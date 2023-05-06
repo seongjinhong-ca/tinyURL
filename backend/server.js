@@ -6,6 +6,8 @@ const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
 
 const bcrypt = require('bcrypt');
+const session = require('express-session');
+
 
 // get the key mongoURI from config/dev_key
 const config = require("./config/dev_key");
@@ -38,7 +40,13 @@ const short_urls = Urls;
 app.use(bodyParser.json({type: '*/*'}));
 app.use(bodyParser.urlencoded({extended:true}));
 
-// temporary storage -> later change it to db by connecting db using other module
+const oneWeek = 1000 * 60 * 60 * 24 * 7
+app.use(session({
+    secret: 'my_secret_key',
+    saveUninitialized: false, // need to identify user using session id
+    cookie:{maxAge: oneWeek},
+    resave:false,
+}))
 
 
 //login system
@@ -203,7 +211,7 @@ app.post(`/shorten`, (req, res)=>{
         originalUrl:originalUrl,
         expiredAt:one_week,
         createdAt:now,
-        // add owner == user of the short url
+        // add owner == user of the short url**********************
     
     }
 
@@ -330,13 +338,14 @@ app.post('/users/register', async (req, res)=>{
 
 const checkPassword = async (inputPassword, user) => {
     // decrypt user.password
+    // compare with inputPassword
     console.log("type: ");
     const match = await bcrypt.compare(inputPassword, user.password)
     return match;
-    // compare with inputPassword
     // if they are the same -> return true
     // if they are different -> re turn false
 }
+
 const checkUserExist = async (user) => {
     const {email, password} = user;
 
@@ -368,27 +377,67 @@ app.post('/users/login', async (req, res)=>{
         email: email,
         password: password,
     }
+    
     // check if user exist, then return the user information
     let ret_user = await checkUserExist(inputUser);
     console.log("ret_user : ")
     console.log(ret_user)
-    if(ret_user.status){
-        return res.status(200).json({
-            success:true,
-            user: ret_user
-        })
+    // check if user is authenticated
+    if(email && password){
+        if(req.session.authenticated){
+            res.json(req.session);
+        }else{
+            // hash the input password to compare the user's hashed password
+            const hashed = hashPassword(password);
+            const str_hashed = hashed.toString();
+            if(bcrypt.compare(str_hashed, ret_user.user.password)){
+                req.session.authenticated = true;
+                req.session.user = {id: ret_user.user._id, email: email};
+                return res.status(200).json(req.session);
+            }
+            else{
+                // not coming here******************
+                return res.status(401).json({
+                    success:false,
+                    authenticationError : "user is not authenticated."
+                })
+            }
+        }
     }
+
+    // if(ret_user.status){
+    //     return res.status(200).json({
+    //         success:true,
+    //         user: ret_user
+    //     })
+    // }
 })
 
 const decryptPassword = () => {
+    
 
 }
+//****************** */
 app.get('/users/logout', (req, res) => {
-    decryptPassword()
+    // remove the authentication of a current user.
+    req.session.destroy();
+    req.status(308).redirect('/');
 
 })
-
+//************************** */
 app.get('/users/me/profile', (req, res) => {
+    const session = req.session;
+    if(session.user.authenticated){
+        return res.status(200).json({
+            success:true,
+            user: session.user
+        })
+    }else{
+        return res.status(401).json({
+            success:false,
+            authError : "authentication error: the user is not authenticated."
+        })
+    }
 
 })
 
