@@ -7,6 +7,10 @@ const UrlSchema = new mongoose.Schema({
     originalUrl:String,
     expiredAt: Date,
     createdAt: Date,
+    owner: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User'
+    }
 
 })
 // create Url model
