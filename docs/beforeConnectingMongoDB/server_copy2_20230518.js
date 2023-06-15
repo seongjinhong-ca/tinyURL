@@ -35,12 +35,12 @@ const store = new MongoDBStore({
 const fs = require('fs');
 
 // file I created
-// const Urls = require('../db/urls.json');
-// const expiryDates = require('../db/expiry.json');
-// const { Url } = require('./model/url');
-// const { User } = require('./model/User');
+const Urls = require('../db/urls.json');
+const expiryDates = require('../db/expiry.json');
+const { Url } = require('./model/url');
+const { User } = require('./model/User');
 
-// const short_urls = Urls;
+const short_urls = Urls;
 
 // get the req.body as a json form
 // app.use(bodyParser.json());
@@ -184,7 +184,7 @@ const sweep_toCheck_expiredUrl = async (req, res, next) => {
     next();
 }
 
-app.post(`/shorten`, validateItIsURL, sweep_toCheck_expiredUrl, async (req, res)=>{
+app.post(`/shorten`, validateItIsURL, sweep_toCheck_expiredUrl, (req, res)=>{
     console.log("req.body: ")
     console.log(req.body);
 
@@ -192,8 +192,7 @@ app.post(`/shorten`, validateItIsURL, sweep_toCheck_expiredUrl, async (req, res)
     console.log(req.remainingUsers)
     // console.log("res.shortUrlParam: ")
     // console.log(res.shortUrlParam)
-
-    // check if it is valid url after validateItIsURL() middleware is ran
+    // check if it is valid url
     if(req.inputURL === null){
         return res.json({
             success:false,
@@ -207,73 +206,60 @@ app.post(`/shorten`, validateItIsURL, sweep_toCheck_expiredUrl, async (req, res)
             err_message: "not valid protocol"
         })
     }
-
-    // request.originalUrl is valid url at this point
-    // protected == if session is authenticated == logged in
-    if(req.session.authenticated){
-        // stringify url
-        const {originalUrl} = req.body;
-        const str_originalUrl = JSON.stringify(originalUrl);
-        console.log("str_originalUrl: ")
-        console.log(str_originalUrl);
-        // generate shortUrl
-        let shortUrlParam = generateShortUrl();
-        // store original url into db
-        // shortUrlParam = checkIfShortUrlParamAlreadyExist(shortUrlParam);
-
-        // produce createdAt
-        const now = Date.now();
-        let date = new Date();
-        // produce expiredAt
-        // const one_week = date.setDate(date.getDate() + 7);
-        console.log("before 10 second -> date: ", date.getSeconds())
-        const one_week = date.setSeconds(date.getSeconds() + 10);
-        console.log("one week: ", one_week)
+    const {originalUrl} = req.body;
+    const str_originalUrl = JSON.stringify(originalUrl);
+    console.log("str_originalUrl: ")
+    console.log(str_originalUrl)
+    // generate shortUrl
+    let shortUrlParam = generateShortUrl();
+    // store original url into db
+    // shortUrlParam = checkIfShortUrlParamAlreadyExist(shortUrlParam);
+    
+    // produce createdAt
+    const now = Date.now();
+    let date = new Date();
+    // produce expiredAt
+    // const one_week = date.setDate(date.getDate() + 7);
+    console.log("before 10 second -> date: ", date.getSeconds())
+    const one_week = date.setSeconds(date.getSeconds() + 10);
+    console.log("one week: ", one_week)
 
 
-        // create an url object
-        const urlObj = {
-            shortUrl:shortUrlParam,
-            originalUrl:originalUrl,
-            expiredAt:one_week,
-            createdAt:now,
-            // add owner == user of the short url**********************
-            // get the userID through session, if session is authenticated, session has user ID.
-            owner:req.session.userId
-        }
-
-        console.log("urlObj: ")
-        console.log(urlObj);
-
-        // try to push the result into MongoDB using mongoose
-        const url = new Url({...urlObj});
-        await url.save().then((url)=>{
-            console.log("url: ")
-            console.log(url)
-            return res.status(200).json(
-                {
-                    success:true,
-                    url:url
-                }
-            )
-        }).catch((err)=>{
-            return res.json(
-                {
-                    success:false,
-                    err:err
-                }
-            )
-        })
-    }else{
-        // session not authenticated
-        return res.status(401).json({
-            success:false,
-            error: "notAuthenticatedError: not authenticated"
-        })
+    // create an url object
+    const urlObj = {
+        shortUrl:shortUrlParam,
+        originalUrl:originalUrl,
+        expiredAt:one_week,
+        createdAt:now,
+        // add owner == user of the short url**********************
+    
     }
+
+    console.log("urlObj: ")
+    console.log(urlObj);
+
+    // try to push the result into MongoDB using mongoose
+    const url = new Url({...urlObj});
+    url.save().then((url)=>{
+        console.log("url: ")
+        console.log(url)
+        return res.status(200).json(
+            {
+                success:true,
+                url:url
+            }
+        )
+    }).catch((err)=>{
+        return res.json(
+            {
+                success:false,
+                err:err
+            }
+        )
+    })
 })
 
-app.get(`/url/:shortUrlId`,sweep_toCheck_expiredUrl, async (req, res) => {
+app.get(`/url/:shortUrlId`,sweep_toCheck_expiredUrl, (req, res) => {
     console.log(req.params)
     const{shortUrlId} = req.params;
 
@@ -296,7 +282,7 @@ app.get(`/url/:shortUrlId`,sweep_toCheck_expiredUrl, async (req, res) => {
 
     // try to get(find) an original url from mongoDB
     const original_url = null;
-    await Url.findOne({shortUrl:shortUrlId})
+    Url.findOne({shortUrl:shortUrlId})
     .then((url) => {
         return res.status(302).redirect(url.originalUrl); // error!!!
     }).catch((err) => {
@@ -347,7 +333,7 @@ app.post('/users/register', sweep_toCheck_expiredUrl, async (req, res)=>{
     // hash the password
     const hashedPassword = await hashPassword(password);
     console.log("hash : ", hashedPassword);
-
+    
     userObj.password = hashedPassword;
     console.log("userObj : ", userObj);
     // hash the password
@@ -422,7 +408,6 @@ const checkUserExist = async (user) => {
 }
 
 app.post('/users/login', sweep_toCheck_expiredUrl, async (req, res)=>{
-    // 1.
     const {email, password} = req.body;
     // create user object
     const inputUser = {
@@ -436,7 +421,6 @@ app.post('/users/login', sweep_toCheck_expiredUrl, async (req, res)=>{
         userDB = await checkUserExist(inputUser);
         console.log("userDB : ")
         console.log(userDB)
-        // UserDB is null == user not found
         // if ret_user is null === user is not found or password is wrong
         if(userDB.error !== null){
             if(userDB.error.statusCode === 404){
@@ -451,7 +435,7 @@ app.post('/users/login', sweep_toCheck_expiredUrl, async (req, res)=>{
                 })
             }
         }
-        // if email and passwords are not given as inputs == block from logging in
+        // if email and passwords are given as inputs == block from logging in
         if(email === null || password === null){
             if(email === null && password === null){
                 console.log("password and email both are missing");
@@ -474,59 +458,53 @@ app.post('/users/login', sweep_toCheck_expiredUrl, async (req, res)=>{
             // authenticate the user through session
             req.session.authenticated = true;
             req.session.userId = userDB.user._id;
-            req.session.email = userDB.user.email;
             res.send("logged in successfully");
-        }else{
-            // no match for password from checkPassword()
-            // match is false
-            // password not match error
-            console.log("user with the password does not exist");
         }
     }catch(error){
         // server error
         console.error('Error during login:', error);
         res.status(500).send('Internal Server Error');
     }
-    // // check if user is authenticated
-    // if(email && password){
-    //     console.log(`req.session : `, req.session);
-    //     if(req.session.user){
-    //         res.json(req.session);
-    //     }else{
-    //         // hash the input password to compare the user's hashed password
-    //         const hashed = hashPassword(password);
-    //         const str_hashed = hashed.toString();
-    //         // if input password and user's password are same, make session authenticated
-    //         if(bcrypt.compare(str_hashed, userDB.user.password)){
-    //             req.session.authenticated = true; // isLoggedIn == true
-    //             req.session.user = {id: userDB.user._id, email: email};
+    // check if user is authenticated
+    if(email && password){
+        console.log(`req.session : `, req.session);
+        if(req.session.user){
+            res.json(req.session);
+        }else{
+            // hash the input password to compare the user's hashed password
+            const hashed = hashPassword(password);
+            const str_hashed = hashed.toString();
+            // if input password and user's password are same, make session authenticated
+            if(bcrypt.compare(str_hashed, userDB.user.password)){
+                req.session.authenticated = true; // isLoggedIn == true
+                req.session.user = {id: userDB.user._id, email: email};
                 
-    //             return res.status(200).json({
-    //                 success: true,
-    //                 user: {id: userDB.user._id, email:email},
-    //             });
-    //         }
-    //         else{
-    //             // not coming here******************
-    //             return res.status(401).json({
-    //                 success:false,
-    //                 authenticationError : "user is not authenticated."
-    //             })
-    //         }
-    //     }
-    // }else{
-    //     if(email === null){
-    //         return res.status(400).json({
-    //             success:false,
-    //             missingParameter:"user email is missing"
-    //         })
-    //     }else if(password === null){
-    //         return res.status(400).json({
-    //             success:false,
-    //             missingParameter:"password is missing"
-    //         })
-    //     }
-    // }
+                return res.status(200).json({
+                    success: true,
+                    user: {id: userDB.user._id, email:email},
+                });
+            }
+            else{
+                // not coming here******************
+                return res.status(401).json({
+                    success:false,
+                    authenticationError : "user is not authenticated."
+                })
+            }
+        }
+    }else{
+        if(email === null){
+            return res.status(400).json({
+                success:false,
+                missingParameter:"user email is missing"
+            })
+        }else if(password === null){
+            return res.status(400).json({
+                success:false,
+                missingParameter:"password is missing"
+            })
+        }
+    }
 
     // if(ret_user.status){
     //     return res.status(200).json({
@@ -544,61 +522,35 @@ app.post('/users/login', sweep_toCheck_expiredUrl, async (req, res)=>{
     */
 })
 
+const decryptPassword = () => {
+    
+
+}
+
 app.get('/users/logout', (req, res) => {
-    // remove the session authentication of a current user.
+    // remove the authentication of a current user.
     req.session.destroy((err)=>{
-        if(err){
-            console.log("Error during session destroy: ", err);
-            res.status(500).send("Internal Server Error");
-        }else{
-            // redirect to login page
-            return res.status(308).redirect('/login');
-        }
+        res.status(308).redirect('/');
     });
+    
+
 })
 //************************** */
-app.get('/users/me/profile', async(req, res) => {
-    // 1.
-    // 2.
-    // 3.
-    /*
-    
-    */
+app.get('/users/me/profile', (req, res) => {
     const session = req.session;
     console.log("From /me/profile -> session: ", session);
     if(session.authenticated){
-        try{
-            // search user
-            const user = await User.findById(req.session.userId);
-
-            // if user is not found
-            if(!user){
-                return res.status(404).json({
-                    success:false,
-                    authError: "authentication error: user is not found"
-                })
-            }
-
-            // found user
-            return res.status(200).json({
-                success:true,
-                user: {
-                    id: user._id,
-                    email:user.email
-                }
-            })
-        }catch(error) {
-            // server error
-            console.error('Error retrieving user:', error);
-            res.status(500).send('Internal Server Error');
-        }
+        return res.status(200).json({
+            success:true,
+            user: session.user
+        })
     }else{
-        // not authenticated -> not logged in
         return res.status(401).json({
             success:false,
             authError : "authentication error: the user is not authenticated."
         })
     }
+
 })
 
 //method 1 : rate limiter using npm package : https://www.npmjs.com/package/simple-rate-limiter
@@ -618,7 +570,7 @@ function handleRequest(){
     // if request count is less than max_request,
     // increase the request count
     requestCount++;
-    // if the time interval ends, reset the count === sliding windows
+    // if the time interval ends, reset the count
     setTimeout(()=>{
         requestCount = 0;
         console.log("reset the count after time interval");
@@ -631,36 +583,6 @@ function runRateLimiter(){
         handleRequest();
     }
 }
-/*
-// method3: https://ipinfo.io/blog/how-to-create-a-simple-rate-limiter-in-node-js/
-// this is mixed windows, method 2 is sliding windows
-
-// ratelimit.js
-const asyncRedis = require("async-redis");
-const client = asyncRedis.createClient();
-
-REQUESTS_LIMIT = 5;
-TTL = 60 * 60; // 3600 seconds = an hour
-
-const rateLimit = async (req, res, next) => {
-	const key = req.ip; // get ip from request
-	const count = await client.incr(key); // increase the count;
-
-  // If key is created for the first time, set expiry
-	if (count === 1) {
-		client.expire(key, TTL); // fixed windows for expiry time
-	}
-
-	if (count > REQUESTS_LIMIT) {
-		return res.status(429).send("Too many requests!");
-	}
-
-	next();
-}
-// app.js
-app.post('/rate-limiter', rateLimit);
-*/
-// method4: https://www.section.io/engineering-education/nodejs-rate-limiting/#:~:text=Rate%20limiter%20implementation%20using%20third%20party%20library&text=In%20the%20index.,const%20port%20%3D%203000%3B%20app.
 
 //******************************************************************* */
 const createExpiryDate = () => {
@@ -671,7 +593,7 @@ const createExpiryDate = () => {
     let expiryDate = {creation_date: creation_date, expiry_date: expiry_date};
     return expiryDate;
 }
-/*================================unnecessary below======================================= */
+
 /*
 link:https://dev.to/rahmanfadhil/how-to-generate-unique-id-in-javascript-1b13
 npm install uuid
@@ -698,8 +620,8 @@ console.log(
 link: https://github.com/agnoster/base32-js
 
 */
-/*
-// const expiry_list = expiryDates;
+
+const expiry_list = expiryDates;
 app.post(`/create_expiryDate`, (req, res)=>{
     // create expiryDate object
     const {date} = req.body;
@@ -786,9 +708,8 @@ app.delete(`/delete_expiryDate/:expiryDate_id`, (req, res)=>{
         err: `The expiry date with ${expiryDate_id} is not found`
     })
 })
-/*
-/*Start running the server and connect server with client through port 3500 */
-// set the port and listen to the request coming from client
+
+// set the port
 const port = 3500;
 app.listen(port, ()=> {
     console.log(`listening to the port ${port}`);
